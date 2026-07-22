@@ -10,8 +10,8 @@ spring:
   # ---------------------------------------------------------------------
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/gemblog_pro?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:}
+    username: sumit
+    password: Sammy@0364
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     # HikariCP is Spring Boot's default connection pool (bundled transitively via
@@ -36,7 +36,6 @@ spring:
     show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
         jdbc:
           time_zone: UTC
@@ -55,14 +54,23 @@ server:
   port: ${PORT:8080}
 
 # ---------------------------------------------------------------------
-# Reserved for later phases (security, ImageKit, Gemini). Not read by any
-# code yet - listed here as placeholders so the eventual property names are
-# planned ahead of time and don't require an application.yml rewrite.
+# JWT (Phase 3). Replaces process.env.JWT_SECRET used by jwt.sign/jwt.verify
+# in adminController.js / middleware/auth.js. No default is given for the
+# secret itself - the app fails fast at startup if JWT_SECRET is unset
+# rather than silently signing tokens with an empty/weak key. It must be a
+# high-entropy value at least 32 bytes long once UTF-8 encoded (HS256
+# requirement) - e.g. `openssl rand -base64 48`.
+# expiration-days: 7 matches the original `{expiresIn: '7d'}` exactly.
 # ---------------------------------------------------------------------
-# jwt:
-#   secret: ${JWT_SECRET:}
-#   expiration-days: 7
-#
+jwt:
+  secret: thisIsMyVeryLongSecretKeyForTesting123456789
+  expiration-days: ${JWT_EXPIRATION_DAYS:7}
+
+# ---------------------------------------------------------------------
+# Reserved for later phases (ImageKit, Gemini). Not read by any code yet -
+# listed here as placeholders so the eventual property names are planned
+# ahead of time and don't require an application.yml rewrite.
+# ---------------------------------------------------------------------
 # imagekit:
 #   public-key: ${IMAGEKIT_PUBLIC_KEY:}
 #   private-key: ${IMAGEKIT_PRIVATE_KEY:}
