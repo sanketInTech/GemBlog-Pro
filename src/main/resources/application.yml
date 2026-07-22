@@ -10,8 +10,8 @@ spring:
   # ---------------------------------------------------------------------
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/gemblog_pro?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true}
-    username: sumit
-    password: Sammy@0364
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     # HikariCP is Spring Boot's default connection pool (bundled transitively via
@@ -36,6 +36,7 @@ spring:
     show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
         jdbc:
           time_zone: UTC
@@ -63,19 +64,25 @@ server:
 # expiration-days: 7 matches the original `{expiresIn: '7d'}` exactly.
 # ---------------------------------------------------------------------
 jwt:
-  secret: thisIsMyVeryLongSecretKeyForTesting123456789
+  secret: ${JWT_SECRET}
   expiration-days: ${JWT_EXPIRATION_DAYS:7}
 
 # ---------------------------------------------------------------------
-# Reserved for later phases (ImageKit, Gemini). Not read by any code yet -
-# listed here as placeholders so the eventual property names are planned
-# ahead of time and don't require an application.yml rewrite.
+# ImageKit (Phase 4). Replaces config/imageKit.js's publicKey/privateKey/
+# urlEndpoint, read there from process.env.IMAGEKIT_*. No defaults - the
+# blog image upload endpoint will fail with a clear ExternalServiceException
+# rather than silently calling ImageKit with a blank key.
 # ---------------------------------------------------------------------
-# imagekit:
-#   public-key: ${IMAGEKIT_PUBLIC_KEY:}
-#   private-key: ${IMAGEKIT_PRIVATE_KEY:}
-#   url-endpoint: ${IMAGEKIT_URL_ENDPOINT:}
-#
-# gemini:
-#   api-key: ${GEMINI_API_KEY:}
-#   model: gemini-2.5-flash
+imagekit:
+  public-key: ${IMAGEKIT_PUBLIC_KEY}
+  private-key: ${IMAGEKIT_PRIVATE_KEY}
+  url-endpoint: ${IMAGEKIT_URL_ENDPOINT}
+
+# ---------------------------------------------------------------------
+# Gemini (Phase 4). Replaces config/gemini.js's `new GoogleGenAI({apiKey:
+# process.env.GEMINI_API_KEY})`. Model defaults to gemini-2.5-flash,
+# matching the hardcoded model name used in the original main() function.
+# ---------------------------------------------------------------------
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  model: ${GEMINI_MODEL:gemini-2.5-flash}

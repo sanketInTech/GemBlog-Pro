@@ -1,6 +1,8 @@
 package com.gemblogpro.exception;
 
 import com.gemblogpro.dto.response.ApiResponse;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -8,6 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 /**
  * Centralizes what, in the Express app, was a
@@ -60,10 +63,67 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Invalid credentials"));
     }
 
-    /** Requested entity not found -> 404 (foundation for Phase 4). */
+    /**
+     * Requested entity not found -> 404. Used by {@code getBlogByID},
+     * {@code deleteBlogByID}, {@code togglePublish} (blog lookups), and
+     * comment/comment-approval lookups.
+     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse> handleNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(ex.getMessage()));
+    }
+
+    /**
+     * Manual Bean Validation failures on a request DTO that was
+     * hand-deserialized rather than bound via {@code @Valid @RequestBody}
+     * (specifically {@code BlogCreateRequest}, which arrives as a JSON
+     * string inside a {@code multipart/form-data} part rather than as the
+     * request body itself) -> 400. Replaces the
+     * {@code if (!title || !description || !category || isPublished === undefined || isPublished === null)}
+     * check in {@code addBlog}.
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse> handleConstraintViolation(ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations().stream()
+                .findFirst()
+                .map(ConstraintViolation::getMessage)
+                .orElse("Validation failed");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure(message));
+    }
+
+    /**
+     * Covers ad-hoc input checks that don't fit the Bean Validation
+     * pipeline, notably the missing-image-file check in {@code addBlog} ->
+     * 400. Replaces {@code if (!imageFile) { return res.json({success:false, message:"Image file is required"}) }}.
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure(ex.getMessage()));
+    }
+
+    /**
+     * Multipart upload exceeding {@code spring.servlet.multipart.max-file-size}
+     * -> 400. Replaces the inline multer error-handling wrapper in
+     * {@code blogRoutes.js}: {@code upload.single('image')(req,res,(err)=>{ if(err) return res.status(400).json(...) })}.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.failure("Uploaded file is too large"));
+    }
+
+    /**
+     * Author-mismatch on delete/toggle-publish -> 403. Replaces
+     * {@code if (blog.author.toString() !== req.user.userId) { return res.json({success:false, message:"Unauthorized"}) }}.
+     */
+    @ExceptionHandler(UnauthorizedActionException.class)
+    public ResponseEntity<ApiResponse> handleUnauthorizedAction(UnauthorizedActionException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.failure(ex.getMessage()));
+    }
+
+    /** ImageKit or Gemini call failed -> 500, with a clearer message than a raw stack trace would give. */
+    @ExceptionHandler(ExternalServiceException.class)
+    public ResponseEntity<ApiResponse> handleExternalService(ExternalServiceException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure(ex.getMessage()));
     }
 
     /** Catch-all fallback -> 500, replacing the generic `catch(error)` in every Express controller. */
