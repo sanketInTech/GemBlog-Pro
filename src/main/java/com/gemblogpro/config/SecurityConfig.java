@@ -82,6 +82,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public admin-auth endpoints - the routes declared *without*
                         // the `auth` middleware in adminRoutes.js.
+
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+
                         .requestMatchers(HttpMethod.POST, "/api/admin/register", "/api/admin/login", "/api/admin/auth")
                         .permitAll()
                         // Public blog-facing endpoints from blogRoutes.js.
