@@ -75,6 +75,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
         try {
             Claims claims = jwtTokenProvider.parseClaims(token);
             String email = jwtTokenProvider.getEmail(claims);
