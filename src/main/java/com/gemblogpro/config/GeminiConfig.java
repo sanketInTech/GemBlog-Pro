@@ -21,7 +21,7 @@ public class GeminiConfig {
     @Value("${gemini.api-key}")
     private String apiKey;
 
-    @Value("${gemini.model:gemini-2.5-flash}")
+    @Value("${gemini.model:gemini-2.5-flash-lite}")
     private String model;
 
     public String getApiKey() {
