@@ -34,4 +34,4 @@ imagekit:
 
 gemini:
   api-key: test-api-key
-  model: gemini-2.5-flash
+  model: gemini-2.5-flash-lite
