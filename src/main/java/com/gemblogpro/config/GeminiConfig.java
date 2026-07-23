@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * Gemini REST API directly via the shared {@code RestTemplate} rather than
  * the Google Gen AI Java SDK, so this class holds the equivalent client
  * configuration (API key, model name) sourced from {@code application.yml}.
- * {@code model} defaults to {@code gemini-2.5-flash}, matching the
+ * {@code model} defaults to {@code gemini-3.5-flash}, matching the
  * hardcoded model name used in the original {@code main()} function.
  */
 @Configuration
@@ -21,7 +21,7 @@ public class GeminiConfig {
     @Value("${gemini.api-key}")
     private String apiKey;
 
-    @Value("${gemini.model:gemini-2.5-flash-lite}")
+    @Value("${gemini.model:gemini-3.5-flash-lite}")
     private String model;
 
     public String getApiKey() {
