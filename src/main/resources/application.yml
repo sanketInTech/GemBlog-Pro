@@ -10,8 +10,8 @@ spring:
   # ---------------------------------------------------------------------
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/gemblog_pro?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:}
+    username: ${DB_USERNAME:sumit}
+    password: ${DB_PASSWORD:Sammy@0364}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     # HikariCP is Spring Boot's default connection pool (bundled transitively via
@@ -105,7 +105,7 @@ management:
 # expiration-days: 7 matches the original `{expiresIn: '7d'}` exactly.
 # ---------------------------------------------------------------------
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:my-super-secret-key-12345678901234567890}
   expiration-days: ${JWT_EXPIRATION_DAYS:7}
 
 # ---------------------------------------------------------------------
@@ -115,9 +115,9 @@ jwt:
 # rather than silently calling ImageKit with a blank key.
 # ---------------------------------------------------------------------
 imagekit:
-  public-key: ${IMAGEKIT_PUBLIC_KEY}
-  private-key: ${IMAGEKIT_PRIVATE_KEY}
-  url-endpoint: ${IMAGEKIT_URL_ENDPOINT}
+  public-key: ${IMAGEKIT_PUBLIC_KEY:dummy-public-key}
+  private-key: ${IMAGEKIT_PRIVATE_KEY:dummy-private-key}
+  url-endpoint: ${IMAGEKIT_URL_ENDPOINT:https://dummy.imagekit.io}
 
 # ---------------------------------------------------------------------
 # Gemini (Phase 4). Replaces config/gemini.js's `new GoogleGenAI({apiKey:
@@ -125,5 +125,5 @@ imagekit:
 # matching the hardcoded model name used in the original main() function.
 # ---------------------------------------------------------------------
 gemini:
-  api-key: ${GEMINI_API_KEY}
+  api-key: ${GEMINI_API_KEY:dummy-gemini-key}
   model: ${GEMINI_MODEL:gemini-2.5-flash}
