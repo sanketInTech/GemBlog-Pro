@@ -126,4 +126,4 @@ imagekit:
 # ---------------------------------------------------------------------
 gemini:
   api-key: ${GEMINI_API_KEY:dummy-gemini-key}
-  model: ${GEMINI_MODEL:gemini-2.5-flash}
+  model: ${GEMINI_MODEL:gemini-2.5-flash-lite}
