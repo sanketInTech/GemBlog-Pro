@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gemblogpro.config.GeminiConfig;
 import com.gemblogpro.exception.ExternalServiceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -34,6 +36,8 @@ import java.util.Map;
  */
 @Service
 public class GeminiContentService {
+
+    private static final Logger log = LoggerFactory.getLogger(GeminiContentService.class);
 
     private static final String ENDPOINT_TEMPLATE =
             "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s";
@@ -67,20 +71,37 @@ public class GeminiContentService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        log.debug("Requesting Gemini content generation, model={}, promptLength={}",
+                geminiConfig.getModel(), fullPrompt.length());
+
         try {
             ResponseEntity<String> response =
                     restTemplate.postForEntity(url, new HttpEntity<>(requestBody, headers), String.class);
 
-            JsonNode root = objectMapper.readTree(response.getBody());
+            String responseBody = response.getBody();
+            if (responseBody == null) {
+                // Phase 5 bug fix: objectMapper.readTree(null) throws an
+                // IllegalArgumentException that isn't caught by the
+                // RestClientException|IOException clause below, so this
+                // previously escaped as an unhandled 500 instead of the
+                // intended ExternalServiceException message.
+                log.error("Gemini returned a null response body (HTTP {})", response.getStatusCode());
+                throw new ExternalServiceException("Gemini returned an empty response");
+            }
+
+            JsonNode root = objectMapper.readTree(responseBody);
             JsonNode textNode = root.path("candidates").path(0).path("content").path("parts").path(0).path("text");
 
             if (textNode.isMissingNode()) {
+                log.error("Gemini response did not contain the expected candidates[0].content.parts[0].text field");
                 throw new ExternalServiceException("Gemini returned an unexpected response");
             }
 
+            log.info("Gemini content generated successfully, length={}", textNode.asText().length());
             return textNode.asText();
 
         } catch (RestClientException | IOException ex) {
+            log.error("Gemini content generation call failed", ex);
             throw new ExternalServiceException("Content generation failed: " + ex.getMessage());
         }
     }

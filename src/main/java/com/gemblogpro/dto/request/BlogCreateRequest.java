@@ -2,6 +2,7 @@ package com.gemblogpro.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * Represents the JSON payload sent as the {@code blog} part of the
@@ -13,20 +14,29 @@ import jakarta.validation.constraints.NotNull;
  * {@code blogController.js}'s {@code addBlog}:
  * {@code if (!title || !description || !category || isPublished === undefined || isPublished === null)}.
  * The accompanying image file is a separate {@code MultipartFile} request
- * part, validated independently in the (not-yet-implemented) controller
- * layer rather than as a field on this DTO.
+ * part, validated independently in the controller layer rather than as a
+ * field on this DTO.
+ * <p>
+ * Phase 5: {@code title}/{@code subTitle}/{@code category} are now capped
+ * to match the {@code Blog} entity's actual column lengths (500/500/100).
+ * Without this, a title longer than the column would pass validation here
+ * and only fail later as a raw Hibernate/MySQL data-truncation error,
+ * surfacing to the client as an opaque 500 instead of a clear 400.
  */
 public class BlogCreateRequest {
 
     @NotBlank(message = "Title is required")
+    @Size(max = 500, message = "Title must be at most 500 characters")
     private String title;
 
+    @Size(max = 500, message = "Subtitle must be at most 500 characters")
     private String subTitle;
 
     @NotBlank(message = "Description is required")
     private String description;
 
     @NotBlank(message = "Category is required")
+    @Size(max = 100, message = "Category must be at most 100 characters")
     private String category;
 
     @NotNull(message = "isPublished is required")

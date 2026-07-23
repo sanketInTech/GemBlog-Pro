@@ -43,6 +43,18 @@ spring:
     open-in-view: false
 
   # ---------------------------------------------------------------------
+  # MVC (Phase 5). Routes unmatched requests to a NoHandlerFoundException
+  # (caught by GlobalExceptionHandler and returned in our standard
+  # {success,message} envelope) instead of Spring Boot's default static-
+  # resource fallback / whitelabel error page.
+  # ---------------------------------------------------------------------
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+
+  # ---------------------------------------------------------------------
   # Multipart upload (replaces middleware/multer.js's memoryStorage config).
   # Sized generously for blog thumbnail images; tightened later if needed.
   # ---------------------------------------------------------------------
@@ -53,6 +65,35 @@ spring:
 
 server:
   port: ${PORT:8080}
+
+# ---------------------------------------------------------------------
+# Logging (Phase 5). Keeps SQL noise out of the default console at INFO
+# while surfacing our own application logging (SLF4J, added throughout the
+# service/security/exception layers in Phase 5) at DEBUG. Override per
+# environment with LOG_LEVEL_ROOT / LOG_LEVEL_APP without editing this file.
+# ---------------------------------------------------------------------
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.gemblogpro: ${LOG_LEVEL_APP:DEBUG}
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n"
+
+# ---------------------------------------------------------------------
+# Actuator (Phase 5). Exposes GET /actuator/health, used by the Docker
+# HEALTHCHECK instruction and by Render's health check configuration.
+# Only `health` and `info` are exposed - no metrics/env/beans endpoints,
+# which can leak configuration details if left open on a public deployment.
+# ---------------------------------------------------------------------
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
 
 # ---------------------------------------------------------------------
 # JWT (Phase 3). Replaces process.env.JWT_SECRET used by jwt.sign/jwt.verify

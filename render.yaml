@@ -1,0 +1,42 @@
+# Render Blueprint (https://render.com/docs/blueprint-spec).
+#
+# IMPORTANT: Render's own managed database offering is PostgreSQL, not
+# MySQL - there is no managed MySQL service to declare here. Provision
+# MySQL 8 externally (e.g. PlanetScale, Railway, AWS RDS, a self-hosted
+# instance) and set DB_URL/DB_USERNAME/DB_PASSWORD below to point at it.
+# Everything else (the web service itself, health checks, env var wiring)
+# is fully described here.
+services:
+  - type: web
+    name: gemblog-pro
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: DB_URL
+        sync: false # e.g. jdbc:mysql://<host>:3306/gemblog_pro?useSSL=true&serverTimezone=UTC
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true # Render generates a random 256-bit+ value
+      - key: JWT_EXPIRATION_DAYS
+        value: 7
+      - key: IMAGEKIT_PUBLIC_KEY
+        sync: false
+      - key: IMAGEKIT_PRIVATE_KEY
+        sync: false
+      - key: IMAGEKIT_URL_ENDPOINT
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: LOG_LEVEL_ROOT
+        value: INFO
+      - key: LOG_LEVEL_APP
+        value: INFO

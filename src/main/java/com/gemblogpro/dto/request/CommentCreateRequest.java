@@ -2,6 +2,8 @@ package com.gemblogpro.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 /**
  * Request body for {@code POST /api/blog/add-comment}.
@@ -13,12 +15,15 @@ import jakarta.validation.constraints.NotNull;
 public class CommentCreateRequest {
 
     @NotNull(message = "blogId is required")
+    @Positive(message = "blogId must be a positive number")
     private Long blogId;
 
     @NotBlank(message = "Name is required")
+    @Size(max = 255, message = "Name must be at most 255 characters")
     private String name;
 
     @NotBlank(message = "Content is required")
+    @Size(max = 5000, message = "Content must be at most 5000 characters")
     private String content;
 
     public CommentCreateRequest() {

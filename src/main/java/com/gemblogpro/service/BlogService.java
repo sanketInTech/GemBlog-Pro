@@ -17,6 +17,8 @@ import com.gemblogpro.repository.UserRepository;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +33,8 @@ import java.util.Set;
  */
 @Service
 public class BlogService {
+
+    private static final Logger log = LoggerFactory.getLogger(BlogService.class);
 
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
@@ -83,6 +87,7 @@ public class BlogService {
                 author);
 
         blogRepository.save(blog);
+        log.info("Created blog id={} title='{}' authorId={}", blog.getId(), blog.getTitle(), authorId);
 
         return ApiResponse.success("Blog Added Successfully");
     }
@@ -120,10 +125,13 @@ public class BlogService {
                 .orElseThrow(() -> new ResourceNotFoundException("Blog not found"));
 
         if (!blog.getAuthor().getId().equals(requesterId)) {
+            log.warn("User id={} attempted to delete blog id={} owned by user id={}",
+                    requesterId, id, blog.getAuthor().getId());
             throw new UnauthorizedActionException("Unauthorized");
         }
 
         blogRepository.delete(blog);
+        log.info("Deleted blog id={}", id);
         return ApiResponse.success("Blog Deleted Successfully");
     }
 
@@ -134,11 +142,14 @@ public class BlogService {
                 .orElseThrow(() -> new ResourceNotFoundException("Blog not found"));
 
         if (!blog.getAuthor().getId().equals(requesterId)) {
+            log.warn("User id={} attempted to toggle publish state on blog id={} owned by user id={}",
+                    requesterId, id, blog.getAuthor().getId());
             throw new UnauthorizedActionException("Unauthorized");
         }
 
         blog.setPublished(!blog.isPublished());
         blogRepository.save(blog);
+        log.info("Blog id={} publish state changed to {}", id, blog.isPublished());
         return ApiResponse.success("Blog status updated.");
     }
 

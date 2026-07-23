@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gemblogpro.config.ImageKitConfig;
 import com.gemblogpro.exception.ExternalServiceException;
 import com.gemblogpro.util.ImageUrlBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -36,6 +38,8 @@ import java.util.Base64;
 @Service
 public class ImageKitService {
 
+    private static final Logger log = LoggerFactory.getLogger(ImageKitService.class);
+
     private static final String UPLOAD_ENDPOINT = "https://upload.imagekit.io/api/v1/files/upload";
     private static final String BLOG_FOLDER = "/blog";
 
@@ -65,19 +69,27 @@ public class ImageKitService {
             body.add("fileName", imageFile.getOriginalFilename());
             body.add("folder", BLOG_FOLDER);
 
+            log.debug("Uploading image '{}' ({} bytes) to ImageKit folder {}",
+                    imageFile.getOriginalFilename(), imageFile.getSize(), BLOG_FOLDER);
+
             ResponseEntity<ImageKitUploadResponse> response = restTemplate.postForEntity(
                     UPLOAD_ENDPOINT, new HttpEntity<>(body, headers), ImageKitUploadResponse.class);
 
             ImageKitUploadResponse uploadResponse = response.getBody();
             if (uploadResponse == null || uploadResponse.getFilePath() == null) {
+                log.error("ImageKit upload returned an unexpected response body: {}", uploadResponse);
                 throw new ExternalServiceException("ImageKit upload returned an unexpected response");
             }
 
-            return ImageUrlBuilder.buildOptimizedUrl(imageKitConfig.getUrlEndpoint(), uploadResponse.getFilePath());
+            String url = ImageUrlBuilder.buildOptimizedUrl(imageKitConfig.getUrlEndpoint(), uploadResponse.getFilePath());
+            log.info("Image uploaded to ImageKit: {}", uploadResponse.getFilePath());
+            return url;
 
         } catch (IOException ex) {
+            log.error("Unable to read the uploaded image file", ex);
             throw new ExternalServiceException("Unable to read the uploaded image file: " + ex.getMessage());
         } catch (RestClientException ex) {
+            log.error("ImageKit upload call failed", ex);
             throw new ExternalServiceException("Image upload failed: " + ex.getMessage());
         }
     }

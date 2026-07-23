@@ -4,6 +4,8 @@ import com.gemblogpro.dto.response.BlogResponse;
 import com.gemblogpro.dto.response.DashboardResponse;
 import com.gemblogpro.repository.BlogRepository;
 import com.gemblogpro.repository.CommentRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,8 @@ import java.util.List;
  */
 @Service
 public class DashboardService {
+
+    private static final Logger log = LoggerFactory.getLogger(DashboardService.class);
 
     private final BlogRepository blogRepository;
     private final CommentRepository commentRepository;
@@ -48,6 +52,7 @@ public class DashboardService {
         DashboardResponse.DashboardData data =
                 new DashboardResponse.DashboardData(blogs, comments, drafts, recentBlogs);
 
+        log.debug("Dashboard stats computed: blogs={} approvedComments={} drafts={}", blogs, comments, drafts);
         return new DashboardResponse(true, data);
     }
 }

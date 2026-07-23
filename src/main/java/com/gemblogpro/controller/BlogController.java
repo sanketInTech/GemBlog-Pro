@@ -14,10 +14,14 @@ import com.gemblogpro.service.BlogService;
 import com.gemblogpro.service.CommentService;
 import com.gemblogpro.service.GeminiContentService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,10 +38,18 @@ import org.springframework.web.multipart.MultipartFile;
  * {@code BlogList.jsx}, and {@code AppContext.jsx} keep working without
  * modification. Per the approved architecture revision, endpoints that
  * create a resource now return {@code 201 Created} instead of {@code 200}.
+ * <p>
+ * {@code @Validated} at the class level activates method-parameter
+ * constraints (e.g. {@code @Positive} on {@link #getBlogById}'s
+ * {@code blogId}) - without it, constraints on a bare {@code @PathVariable}
+ * are silently ignored rather than enforced.
  */
 @RestController
 @RequestMapping("/api/blog")
+@Validated
 public class BlogController {
+
+    private static final Logger log = LoggerFactory.getLogger(BlogController.class);
 
     private final BlogService blogService;
     private final CommentService commentService;
@@ -66,6 +78,7 @@ public class BlogController {
             @RequestParam(value = "image", required = false) MultipartFile image,
             @AuthenticationPrincipal UserPrincipal principal) {
 
+        log.info("Creating blog for author id={}", principal.getId());
         ApiResponse response = blogService.createBlog(blogJson, image, principal.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -80,6 +93,7 @@ public class BlogController {
     @PostMapping("/delete")
     public ResponseEntity<ApiResponse> deleteBlog(@Valid @RequestBody BlogIdRequest request,
                                                    @AuthenticationPrincipal UserPrincipal principal) {
+        log.info("Deleting blog id={} requested by user id={}", request.getId(), principal.getId());
         return ResponseEntity.ok(blogService.deleteBlog(request.getId(), principal.getId()));
     }
 
@@ -87,12 +101,14 @@ public class BlogController {
     @PostMapping("/toggle-publish")
     public ResponseEntity<ApiResponse> togglePublish(@Valid @RequestBody BlogIdRequest request,
                                                        @AuthenticationPrincipal UserPrincipal principal) {
+        log.info("Toggling publish state for blog id={} requested by user id={}", request.getId(), principal.getId());
         return ResponseEntity.ok(blogService.togglePublish(request.getId(), principal.getId()));
     }
 
     /** Replaces {@code blogRouter.post('/add-comment', addComment)} (public). */
     @PostMapping("/add-comment")
     public ResponseEntity<ApiResponse> addComment(@Valid @RequestBody CommentCreateRequest request) {
+        log.info("Adding comment for blog id={}", request.getBlogId());
         return ResponseEntity.status(HttpStatus.CREATED).body(commentService.addComment(request));
     }
 
@@ -105,13 +121,21 @@ public class BlogController {
     /** Replaces {@code blogRouter.post('/generate', auth, generateContent)}. */
     @PostMapping("/generate")
     public ResponseEntity<GeneratedContentResponse> generate(@Valid @RequestBody GenerateContentRequest request) {
+        log.info("Generating AI content for prompt of length={}", request.getPrompt().length());
         String content = geminiContentService.generateBlogContent(request.getPrompt());
         return ResponseEntity.ok(new GeneratedContentResponse(true, content));
     }
 
-    /** Replaces {@code blogRouter.get('/:blogId', getBlogByID)} (public). */
+    /**
+     * Replaces {@code blogRouter.get('/:blogId', getBlogByID)} (public).
+     * {@code @Positive} (Phase 5 addition) rejects {@code 0} or negative
+     * IDs at the framework boundary with a clean 400, instead of letting
+     * them reach the repository as a well-formed but nonsensical query that
+     * simply returns "not found".
+     */
     @GetMapping("/{blogId}")
-    public ResponseEntity<BlogDetailResponse> getBlogById(@PathVariable Long blogId) {
+    public ResponseEntity<BlogDetailResponse> getBlogById(
+            @PathVariable @Positive(message = "blogId must be a positive number") Long blogId) {
         return ResponseEntity.ok(blogService.getBlogById(blogId));
     }
 }

@@ -1,6 +1,7 @@
 package com.gemblogpro.dto.request;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 /**
  * Request body for {@code POST /api/blog/comments}.
@@ -10,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 public class CommentsByBlogRequest {
 
     @NotNull(message = "blogId is required")
+    @Positive(message = "blogId must be a positive number")
     private Long blogId;
 
     public CommentsByBlogRequest() {

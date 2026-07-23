@@ -5,6 +5,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,6 +42,8 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     public static final String AUTH_HEADER = "Authorization";
     public static final String AUTH_ERROR_ATTRIBUTE = "jwt_auth_error";
 
@@ -65,6 +69,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // still proceed unauthenticated. Protected endpoints will be denied
             // downstream by the authorization rules, at which point
             // JwtAuthenticationEntryPoint reads this attribute.
+            log.debug("No Authorization header present for {} {}", request.getMethod(), request.getRequestURI());
             request.setAttribute(AUTH_ERROR_ATTRIBUTE, "No token provided");
             filterChain.doFilter(request, response);
             return;
@@ -80,11 +85,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.debug("Authenticated request for {} {} as email={}", request.getMethod(), request.getRequestURI(), email);
             }
         } catch (Exception ex) {
             // Mirrors the catch block in auth.js: `res.json({success:false, message:"Invalid token"})`.
             // Covers an expired/malformed/tampered token as well as a token
-            // whose user no longer exists.
+            // whose user no longer exists. The token value itself is never
+            // logged - only the failure reason.
+            log.warn("Rejected invalid token on {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
             SecurityContextHolder.clearContext();
             request.setAttribute(AUTH_ERROR_ATTRIBUTE, "Invalid token");
         }

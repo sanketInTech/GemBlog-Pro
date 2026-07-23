@@ -10,6 +10,8 @@ import com.gemblogpro.entity.Comment;
 import com.gemblogpro.exception.ResourceNotFoundException;
 import com.gemblogpro.repository.BlogRepository;
 import com.gemblogpro.repository.CommentRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,8 @@ import java.util.List;
  */
 @Service
 public class CommentService {
+
+    private static final Logger log = LoggerFactory.getLogger(CommentService.class);
 
     private final CommentRepository commentRepository;
     private final BlogRepository blogRepository;
@@ -49,6 +53,7 @@ public class CommentService {
 
         Comment comment = new Comment(blog, request.getName(), request.getContent());
         commentRepository.save(comment);
+        log.info("Comment id={} added to blog id={}, pending moderation", comment.getId(), blog.getId());
 
         return ApiResponse.success("Comment Added For Review.");
     }
@@ -86,6 +91,7 @@ public class CommentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
         comment.setApproved(true);
         commentRepository.save(comment);
+        log.info("Approved comment id={}", id);
         return ApiResponse.success("Comment Approved Successfully.");
     }
 
@@ -99,6 +105,7 @@ public class CommentService {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
         commentRepository.delete(comment);
+        log.info("Deleted comment id={}", id);
         return ApiResponse.success("Comment Deleted Successfully");
     }
 

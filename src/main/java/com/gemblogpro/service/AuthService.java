@@ -11,6 +11,8 @@ import com.gemblogpro.exception.InvalidCredentialsException;
 import com.gemblogpro.repository.UserRepository;
 import com.gemblogpro.security.JwtTokenProvider;
 import com.gemblogpro.security.UserPrincipal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -62,6 +66,7 @@ public class AuthService {
     @Transactional
     public ApiResponse register(AdminRegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
+            log.warn("Registration rejected - email already registered: {}", request.getEmail());
             throw new DuplicateResourceException("Email already registered");
         }
 
@@ -69,6 +74,7 @@ public class AuthService {
         User newUser = new User(request.getName(), request.getEmail(), hashedPassword);
         userRepository.save(newUser);
 
+        log.info("Registered new admin user id={} email={}", newUser.getId(), newUser.getEmail());
         return ApiResponse.success("Registration successful. Please login.");
     }
 
@@ -94,6 +100,7 @@ public class AuthService {
             authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         } catch (BadCredentialsException ex) {
+            log.warn("Login failed - invalid credentials for email={}", request.getEmail());
             throw new InvalidCredentialsException("Invalid credentials");
         }
 
@@ -104,6 +111,7 @@ public class AuthService {
         UserSummaryResponse userSummary =
                 new UserSummaryResponse(user.getId(), user.getName(), user.getEmail());
 
+        log.info("Login successful for user id={} email={}", user.getId(), user.getEmail());
         return new AuthResponse(true, token, userSummary);
     }
 }

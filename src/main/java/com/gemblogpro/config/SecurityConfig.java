@@ -3,6 +3,8 @@ package com.gemblogpro.config;
 import com.gemblogpro.security.JwtAccessDeniedHandler;
 import com.gemblogpro.security.JwtAuthenticationEntryPoint;
 import com.gemblogpro.security.JwtAuthenticationFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -31,6 +33,8 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -80,17 +84,21 @@ public class SecurityConfig {
                         // the `auth` middleware in adminRoutes.js.
                         .requestMatchers(HttpMethod.POST, "/api/admin/register", "/api/admin/login", "/api/admin/auth")
                         .permitAll()
-                        // Public blog-facing endpoints from blogRoutes.js (controllers
-                        // land in a later phase; declared here ahead of time so they
-                        // aren't blocked by the default-deny rule below once they exist).
+                        // Public blog-facing endpoints from blogRoutes.js.
                         .requestMatchers(HttpMethod.GET, "/api/blog/all", "/api/blog/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/blog/add-comment", "/api/blog/comments").permitAll()
+                        // Container/platform health check (Docker HEALTHCHECK, Render
+                        // health check) - must be reachable without a JWT.
+                        .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
                         // Every other /api/** route requires a valid JWT - this is the
                         // equivalent of every route in adminRoutes.js / blogRoutes.js
-                        // that has the `auth` middleware applied.
+                        // that has the `auth` middleware applied. This also covers every
+                        // /api/admin/** management endpoint and /api/blog/add,
+                        // /delete, /toggle-publish, /generate from Phase 4.
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
+        log.info("Security filter chain configured: stateless JWT auth, public admin auth + public blog read/comment endpoints");
         return http.build();
     }
 

@@ -9,6 +9,8 @@ import com.gemblogpro.service.BlogService;
 import com.gemblogpro.service.CommentService;
 import com.gemblogpro.service.DashboardService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,6 +30,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
     private final CommentService commentService;
     private final BlogService blogService;
@@ -56,12 +60,14 @@ public class AdminController {
     /** Replaces {@code adminRouter.post("/delete-comment", auth, deleteCommentById)}. */
     @PostMapping("/delete-comment")
     public ResponseEntity<ApiResponse> deleteComment(@Valid @RequestBody CommentIdRequest request) {
+        log.info("Deleting comment id={}", request.getId());
         return ResponseEntity.ok(commentService.deleteComment(request.getId()));
     }
 
     /** Replaces {@code adminRouter.post("/approve-comment", auth, ApproveCommentById)}. */
     @PostMapping("/approve-comment")
     public ResponseEntity<ApiResponse> approveComment(@Valid @RequestBody CommentIdRequest request) {
+        log.info("Approving comment id={}", request.getId());
         return ResponseEntity.ok(commentService.approveComment(request.getId()));
     }
 

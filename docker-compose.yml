@@ -1,0 +1,47 @@
+# Local / self-hosted deployment: the app plus a MySQL 8 instance.
+# Copy .env.example to .env and fill in real values before running:
+#   docker compose up --build
+#
+# This is NOT what's used for the Maven build itself (see Dockerfile) - it
+# only orchestrates running the already-built image together with its
+# database dependency.
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: gemblog_pro
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-changeme}
+    ports:
+      - "3306:3306"
+    volumes:
+      - gemblog-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD:-changeme}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/gemblog_pro?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-changeme}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_DAYS: ${JWT_EXPIRATION_DAYS:-7}
+      IMAGEKIT_PUBLIC_KEY: ${IMAGEKIT_PUBLIC_KEY}
+      IMAGEKIT_PRIVATE_KEY: ${IMAGEKIT_PRIVATE_KEY}
+      IMAGEKIT_URL_ENDPOINT: ${IMAGEKIT_URL_ENDPOINT}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      PORT: 8080
+
+volumes:
+  gemblog-mysql-data:

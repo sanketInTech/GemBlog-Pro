@@ -5,6 +5,8 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.WeakKeyException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +39,8 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
+
     private static final String CLAIM_EMAIL = "email";
 
     private final SecretKey signingKey;
@@ -62,6 +66,7 @@ public class JwtTokenProvider {
         }
 
         this.expirationMillis = expirationDays * 24L * 60L * 60L * 1000L;
+        log.info("JwtTokenProvider initialized (token expiry: {} day(s))", expirationDays);
     }
 
     /**

@@ -78,10 +78,27 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Actuator: exposes /actuator/health for Docker HEALTHCHECK / Render
+             health checks (Phase 5). No custom code needed - auto-configured. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Test scope -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- In-memory database used only by the test-scoped Spring context
+             load test (GemBlogProApplicationTests) - lets the full bean
+             graph be verified without a real MySQL instance. Never used by
+             the running application. -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
 

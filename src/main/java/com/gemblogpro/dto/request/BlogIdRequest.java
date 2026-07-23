@@ -1,6 +1,7 @@
 package com.gemblogpro.dto.request;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 /**
  * Request body for {@code POST /api/blog/delete} and
@@ -11,6 +12,7 @@ import jakarta.validation.constraints.NotNull;
 public class BlogIdRequest {
 
     @NotNull(message = "id is required")
+    @Positive(message = "id must be a positive number")
     private Long id;
 
     public BlogIdRequest() {

@@ -6,6 +6,8 @@ import com.gemblogpro.dto.response.ApiResponse;
 import com.gemblogpro.dto.response.AuthResponse;
 import com.gemblogpro.service.AuthService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,6 +33,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/admin")
 public class AuthController {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
     private final AuthService authService;
 
     public AuthController(AuthService authService) {
@@ -40,13 +44,19 @@ public class AuthController {
     /** Replaces {@code adminRouter.post("/register", adminRegister)}. */
     @PostMapping("/register")
     public ResponseEntity<ApiResponse> register(@Valid @RequestBody AdminRegisterRequest request) {
+        log.info("Registration attempt for email={}", request.getEmail());
         ApiResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /** Replaces {@code adminRouter.post("/login", adminLogin)}. */
+    /**
+     * Replaces {@code adminRouter.post("/login", adminLogin)}. Only the
+     * email is ever logged - the raw password never touches a log line
+     * anywhere in this codebase.
+     */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AdminLoginRequest request) {
+        log.info("Login attempt for email={}", request.getEmail());
         return ResponseEntity.ok(authService.login(request));
     }
 
@@ -58,6 +68,7 @@ public class AuthController {
      */
     @PostMapping("/auth")
     public ResponseEntity<AuthResponse> authenticate(@Valid @RequestBody AdminLoginRequest request) {
+        log.info("Login attempt (via /auth alias) for email={}", request.getEmail());
         return ResponseEntity.ok(authService.login(request));
     }
 }

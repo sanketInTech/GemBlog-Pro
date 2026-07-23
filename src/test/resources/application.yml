@@ -1,0 +1,37 @@
+# Test-only configuration, used exclusively by GemBlogProApplicationTests.
+# Never packaged into the application JAR (src/test/resources is
+# test-classpath only) and never used by the running application - the real
+# app always uses src/main/resources/application.yml against MySQL.
+spring:
+  datasource:
+    url: jdbc:h2:mem:gemblog_pro_test;DB_CLOSE_DELAY=-1;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: false
+
+server:
+  port: 0
+
+# Dummy values so every @Value-injected config bean (JwtTokenProvider,
+# ImageKitConfig, GeminiConfig) can be constructed during context startup.
+# JWT secret must still satisfy the real 32-byte HS256 minimum.
+jwt:
+  secret: test-only-secret-key-not-used-in-production-32bytes+
+  expiration-days: 7
+
+imagekit:
+  public-key: test-public-key
+  private-key: test-private-key
+  url-endpoint: https://ik.imagekit.io/test
+
+gemini:
+  api-key: test-api-key
+  model: gemini-2.5-flash
