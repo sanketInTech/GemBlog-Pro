@@ -22,7 +22,7 @@ import java.util.Map;
  * Replaces {@code config/gemini.js}:
  * <pre>
  *   async function main(prompt) {
- *     const response = await ai.models.generateContent({ model: "gemini-2.5-flash", contents: prompt });
+ *     const response = await ai.models.generateContent({ model:"gemini-3.5-flash-lite", contents: prompt });
  *     return response.text;
  *   }
  * </pre>
