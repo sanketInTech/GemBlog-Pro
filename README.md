@@ -137,7 +137,7 @@ java -jar target/gemblog-pro.jar
 Application:
 
 ```
-http://localhost:8080
+https://gemblog-pro.onrender.com
 ```
 
 ---
@@ -149,13 +149,13 @@ Interactive API documentation is available after starting the application.
 ### Swagger UI
 
 ```
-http://localhost:8080/swagger-ui/index.html
+https://gemblog-pro.onrender.com/swagger-ui/index.html#/
 ```
 
 ### OpenAPI Specification
 
 ```
-http://localhost:8080/v3/api-docs
+https://gemblog-pro.onrender.com/v3/api-docs
 ```
 
 Swagger provides:
