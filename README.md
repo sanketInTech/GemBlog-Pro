@@ -246,6 +246,34 @@ Comment
 
 ---
 
+## AI Blog Generation Flow
+
+```text
+User Login
+    │
+    ▼
+Receive JWT Token
+    │
+    ▼
+Authorize in Swagger (Bearer Token)
+    │
+    ▼
+POST /api/blog/generate
+    │
+    ▼
+Spring Boot Backend
+    │
+    ▼
+Gemini API
+    │
+    ▼
+AI-Generated Blog Content
+    │
+    ▼
+JSON Response Returned
+```
+---
+
 # Security
 
 - JWT Authentication
@@ -296,42 +324,19 @@ docker run -p 8080:8080 --env-file .env gemblog-pro
 
 ## Swagger UI
 
-> Add a screenshot here
-
-```
-docs/images/swagger-home.png
-```
+![Swagger UI](docs/images/swagger-home.png)
 
 ## API Endpoints
 
-> Add a screenshot here
-
-```
-docs/images/swagger-endpoints.png
-```
+![API Endpoints](docs/images/swagger-endpoints.png)
 
 ## Authentication
 
-> Add login endpoint screenshot
+![JWT Authentication](docs/images/swagger-auth.png)
 
-```
-docs/images/swagger-auth.png
-```
+## AI Blog Generation
 
----
-
-# Future Improvements
-
-- Refresh Tokens
-- Multiple User Roles
-- Pagination
-- Search
-- Redis Caching
-- Email Notifications
-- Rate Limiting
-- CI/CD Pipeline
-- Kubernetes Deployment
-
+![AI Blog Generation](docs/images/ai-blog-generation.png)
 ---
 
 # License
