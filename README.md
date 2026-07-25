@@ -179,6 +179,12 @@ npm run dev
 
 # Live Demo
 
+### Frontend 
+
+```
+https://gemblog-pro.netlify.app/
+```
+
 ### Backend API
 
 ```
