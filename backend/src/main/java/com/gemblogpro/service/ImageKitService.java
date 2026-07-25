@@ -1,22 +1,20 @@
 package com.gemblogpro.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gemblogpro.config.ImageKitConfig;
 import com.gemblogpro.exception.ExternalServiceException;
 import com.gemblogpro.util.ImageUrlBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.io.IOException;
 import java.util.Base64;
 
@@ -43,13 +41,13 @@ public class ImageKitService {
     private static final String UPLOAD_ENDPOINT = "https://upload.imagekit.io/api/v1/files/upload";
     private static final String BLOG_FOLDER = "/blog";
 
-    private final RestTemplate restTemplate;
     private final ImageKitConfig imageKitConfig;
+    private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    public ImageKitService(RestTemplate restTemplate, ImageKitConfig imageKitConfig) {
-        this.restTemplate = restTemplate;
+    public ImageKitService(ImageKitConfig imageKitConfig) {
         this.imageKitConfig = imageKitConfig;
     }
+
 
     /**
      * Uploads a blog thumbnail image to the {@code /blog} folder and
@@ -60,37 +58,61 @@ public class ImageKitService {
         try {
             String base64File = Base64.getEncoder().encodeToString(imageFile.getBytes());
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-            headers.setBasicAuth(imageKitConfig.getPrivateKey(), "");
+            String boundary = "Boundary-" + UUID.randomUUID();
 
-            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            body.add("file", base64File);
-            body.add("fileName", imageFile.getOriginalFilename());
-            body.add("folder", BLOG_FOLDER);
+            String body =
+                    "--" + boundary + "\r\n" +
+                            "Content-Disposition: form-data; name=\"file\"\r\n\r\n" +
+                            base64File + "\r\n" +
 
-            log.debug("Uploading image '{}' ({} bytes) to ImageKit folder {}",
-                    imageFile.getOriginalFilename(), imageFile.getSize(), BLOG_FOLDER);
+                            "--" + boundary + "\r\n" +
+                            "Content-Disposition: form-data; name=\"fileName\"\r\n\r\n" +
+                            imageFile.getOriginalFilename() + "\r\n" +
 
-            ResponseEntity<ImageKitUploadResponse> response = restTemplate.postForEntity(
-                    UPLOAD_ENDPOINT, new HttpEntity<>(body, headers), ImageKitUploadResponse.class);
+                            "--" + boundary + "\r\n" +
+                            "Content-Disposition: form-data; name=\"folder\"\r\n\r\n" +
+                            BLOG_FOLDER + "\r\n" +
 
-            ImageKitUploadResponse uploadResponse = response.getBody();
-            if (uploadResponse == null || uploadResponse.getFilePath() == null) {
-                log.error("ImageKit upload returned an unexpected response body: {}", uploadResponse);
-                throw new ExternalServiceException("ImageKit upload returned an unexpected response");
+                            "--" + boundary + "--\r\n";
+
+            String auth = Base64.getEncoder().encodeToString(
+                    (imageKitConfig.getPrivateKey() + ":")
+                            .getBytes(StandardCharsets.UTF_8));
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(UPLOAD_ENDPOINT))
+                    .header("Authorization", "Basic " + auth)
+                    .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .build();
+
+            HttpResponse<String> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            System.out.println("Status: " + response.statusCode());
+            System.out.println("Body: " + response.body());
+
+            if (response.statusCode() != 200) {
+                throw new ExternalServiceException("ImageKit upload failed: " + response.body());
             }
 
-            String url = ImageUrlBuilder.buildOptimizedUrl(imageKitConfig.getUrlEndpoint(), uploadResponse.getFilePath());
-            log.info("Image uploaded to ImageKit: {}", uploadResponse.getFilePath());
-            return url;
+            ObjectMapper mapper = new ObjectMapper();
+            ImageKitUploadResponse uploadResponse =
+                    mapper.readValue(response.body(), ImageKitUploadResponse.class);
 
-        } catch (IOException ex) {
-            log.error("Unable to read the uploaded image file", ex);
-            throw new ExternalServiceException("Unable to read the uploaded image file: " + ex.getMessage());
-        } catch (RestClientException ex) {
-            ex.printStackTrace();
-            throw ex;
+            if (uploadResponse.getFilePath() == null) {
+                throw new ExternalServiceException("ImageKit did not return a file path.");
+            }
+
+            String imageUrl = ImageUrlBuilder.buildOptimizedUrl(
+                    imageKitConfig.getUrlEndpoint(),
+                    uploadResponse.getFilePath());
+
+            return imageUrl;
+
+        } catch (IOException | InterruptedException ex){
+            log.error("Image upload failed", ex);
+            throw new ExternalServiceException("Image upload failed: " + ex.getMessage());
         }
     }
 
