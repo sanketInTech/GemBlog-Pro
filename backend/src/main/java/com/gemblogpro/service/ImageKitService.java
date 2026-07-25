@@ -89,8 +89,8 @@ public class ImageKitService {
             log.error("Unable to read the uploaded image file", ex);
             throw new ExternalServiceException("Unable to read the uploaded image file: " + ex.getMessage());
         } catch (RestClientException ex) {
-            log.error("ImageKit upload call failed", ex);
-            throw new ExternalServiceException("Image upload failed: " + ex.getMessage());
+            ex.printStackTrace();
+            throw ex;
         }
     }
 
