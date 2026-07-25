@@ -1,23 +1,75 @@
 # GemBlog Pro
 
-A production-ready backend REST API for a blogging platform built with Spring Boot. It provides secure JWT authentication, blog management, AI-assisted content generation, image uploads, comment moderation, and an admin dashboard.
+GemBlog Pro is a full-stack AI-powered blogging platform built with Spring Boot and React. It allows administrators to create, manage, and publish blogs while using Google Gemini AI to generate content. The application also includes secure authentication, image uploads, comment moderation, and an admin dashboard for managing the platform.
 
 ---
 
+## Preview
+
+### Home Page
+
+![Home Page](frontend/client/docs/images/home-page.png)
+
+### Blog Page
+
+![Blog Page](frontend/client/docs/images/blog-page.png)
+
+### Admin Dashboard
+
+![Admin Dashboard](frontend/client/docs/images/admin-dashboard.png)
+
 ## Features
 
-- JWT-based authentication and authorization
-- Create, update, publish, update, and delete blogs
-- AI-assisted blog content generation using Google Gemini
-- Image upload integration with ImageKit
-- Blog commenting system with admin moderation
-- Admin dashboard with analytics
+### Authentication & Security
+
+- JWT-based authentication
+- Secure admin login
+- Password encryption using BCrypt
+- Protected admin APIs with Spring Security
+- Stateless authentication
+
+### Blog Management
+
+- Create, edit, publish, and delete blogs
+- Rich blog management dashboard
+- Upload cover images
+- View published blogs
+- Responsive blog pages
+
+### AI Content Generation
+
+- Generate complete blog drafts using Google Gemini AI
+- AI-generated content can be edited before publishing
+- Fast content generation workflow
+
+### Comments
+
+- Visitors can leave comments on blogs
+- Admin approval system for comments
+- Delete inappropriate comments
+
+### Admin Dashboard
+
+- Blog statistics
+- Comment moderation
+- Manage published and draft blogs
+- Quick access to blog management features
+
+### User Experience
+
+- Clean and responsive React UI
+- Modern dashboard design
+- Mobile-friendly layout
+- Smooth navigation
+
+### Developer Features
+
+- RESTful API
+- Swagger/OpenAPI documentation
 - Global exception handling
 - Request validation
-- OpenAPI 3 / Swagger documentation
-- Spring Boot Actuator
 - Docker support
-- Unit and integration testing
+- Unit & Integration Testing
 
 ---
 
@@ -25,72 +77,65 @@ A production-ready backend REST API for a blogging platform built with Spring Bo
 
 | Category | Technology |
 |-----------|------------|
-| Language | Java 21 |
-| Framework | Spring Boot 3.3.4 |
-| Security | Spring Security + JWT |
+| Frontend | React, Vite, React Router |
+| Backend | Spring Boot 3, Java 21 |
+| Security | Spring Security, JWT |
+| Database | MySQL |
 | ORM | Spring Data JPA (Hibernate) |
-| Database | MySQL 8 |
-| Build Tool | Maven |
-| Documentation | Swagger / OpenAPI |
-| Connection Pool | HikariCP |
 | AI | Google Gemini API |
 | Image Storage | ImageKit |
-| Testing | JUnit 5, Mockito |
-| Deployment | Docker |
-
----
-
-# System Architecture
-
-```
-                   Client
-                      │
-                      ▼
-               Spring Security
-             (JWT Authentication)
-                      │
-                      ▼
-                 REST Controllers
-                      │
-        ┌─────────────┴─────────────┐
-        ▼                           ▼
-  Service Layer              AI/Image Services
-        │                    Gemini / ImageKit
-        ▼
- Repository Layer
-        │
-        ▼
-      MySQL
-```
+| API Documentation | Swagger / OpenAPI |
+| Build Tool | Maven |
+| Deployment | Docker, Render |
 
 ---
 
 # Project Structure
 
 ```text
-src/main/java/com/gemblogpro
-├── config
-├── controller
-├── dto
-├── entity
-├── exception
-├── repository
-├── security
-├── service
-└── util
+GemBlog-Pro
+│
+├── backend
+│   ├── src
+│   ├── docs
+│   ├── pom.xml
+│   └── Dockerfile
+│
+├── frontend
+│   └── client
+│
+└── README.md
 ```
 
 ---
 
-# Prerequisites
+# System Architecture
+
+```text
+                React Frontend
+                       │
+                       ▼
+             Spring Boot REST API
+                       │
+        ┌──────────────┼──────────────┐
+        ▼              ▼              ▼
+     MySQL         Gemini AI      ImageKit
+```
+
+---
+
+# Getting Started
+
+## Prerequisites
 
 - Java 21
 - Maven
+- Node.js (18+ recommended)
 - MySQL 8+
 
 ---
 
-# Installation
+## Clone Repository
 
 ```bash
 git clone https://github.com/sanketInTech/GemBlog-Pro.git
@@ -100,56 +145,50 @@ cd GemBlog-Pro
 
 ---
 
-# Environment Variables
-
-Create a `.env` file.
-
-```env
-DB_URL=
-DB_USERNAME=
-DB_PASSWORD=
-
-JWT_SECRET=
-
-IMAGEKIT_PUBLIC_KEY=
-IMAGEKIT_PRIVATE_KEY=
-IMAGEKIT_URL_ENDPOINT=
-
-GEMINI_API_KEY=
-```
-
----
-
-# Running the Project
+# Running the Backend
 
 ```bash
+cd backend
+
 mvn spring-boot:run
 ```
 
 or
 
 ```bash
+cd backend
+
 mvn clean install
 
 java -jar target/gemblog-pro.jar
 ```
 
-Application:
+---
+
+# Running the Frontend
+
+```bash
+cd frontend/client
+
+npm install
+
+npm run dev
+```
+
+---
+
+# Live Demo
+
+### Backend API
 
 ```
 https://gemblog-pro.onrender.com
 ```
 
----
-
-# API Documentation (Swagger)
-
-Interactive API documentation is available after starting the application.
-
 ### Swagger UI
 
 ```
-https://gemblog-pro.onrender.com/swagger-ui/index.html#/
+https://gemblog-pro.onrender.com/swagger-ui/index.html
 ```
 
 ### OpenAPI Specification
@@ -158,26 +197,17 @@ https://gemblog-pro.onrender.com/swagger-ui/index.html#/
 https://gemblog-pro.onrender.com/v3/api-docs
 ```
 
-Swagger provides:
-
-- Interactive API testing
-- JWT Authentication support
-- Request & Response schemas
-- Endpoint documentation
-
 ---
 
 # Authentication
 
-Login endpoint:
+Login using
 
 ```
 POST /api/admin/login
 ```
 
-Copy the returned JWT token.
-
-Click **Authorize** inside Swagger and enter:
+Copy the JWT token and authorize inside Swagger.
 
 ```
 Bearer <your-token>
@@ -185,20 +215,20 @@ Bearer <your-token>
 
 ---
 
-# REST API Modules
+# API Modules
 
 ### Authentication
 
 - Register Admin
 - Login
-- Verify Authentication
+- Authentication Verification
 
-### Blog
+### Blogs
 
 - Create Blog
 - Update Blog
 - Delete Blog
-- Publish / Unpublish Blog
+- Publish / Unpublish
 - Get Blog
 - Get All Blogs
 
@@ -220,19 +250,19 @@ Bearer <your-token>
 
 # Database
 
-Uses **MySQL** with Hibernate (`ddl-auto=update`).
-
-Main entities:
+Main entities
 
 ```
 Admin
+
 Blog
+
 Comment
 ```
 
-Relationships
+Relationship
 
-```
+```text
 Admin
    │
    │ 1:N
@@ -246,47 +276,33 @@ Comment
 
 ---
 
-## AI Blog Generation Flow
+# AI Blog Generation Flow
 
 ```text
-User Login
-    │
-    ▼
+Admin Login
+      │
+      ▼
 Receive JWT Token
-    │
-    ▼
-Authorize in Swagger (Bearer Token)
-    │
-    ▼
-POST /api/blog/generate
-    │
-    ▼
+      │
+      ▼
+Generate Blog Request
+      │
+      ▼
 Spring Boot Backend
-    │
-    ▼
-Gemini API
-    │
-    ▼
-AI-Generated Blog Content
-    │
-    ▼
-JSON Response Returned
+      │
+      ▼
+Google Gemini API
+      │
+      ▼
+AI Generated Content
+      │
+      ▼
+Edit & Publish Blog
 ```
----
-
-# Security
-
-- JWT Authentication
-- Stateless Sessions
-- Password Encryption (BCrypt)
-- Protected Admin APIs
-- Public Blog APIs
 
 ---
 
 # Health Endpoint
-
-Spring Boot Actuator
 
 ```
 GET /actuator/health
@@ -294,25 +310,17 @@ GET /actuator/health
 
 ---
 
-# Testing
-
-Run all tests
-
-```bash
-mvn clean test
-```
-
----
-
 # Docker
 
-Build image
+Build
 
 ```bash
+cd backend
+
 docker build -t gemblog-pro .
 ```
 
-Run container
+Run
 
 ```bash
 docker run -p 8080:8080 --env-file .env gemblog-pro
@@ -320,25 +328,31 @@ docker run -p 8080:8080 --env-file .env gemblog-pro
 
 ---
 
+# Testing
+
+```bash
+cd backend
+
+mvn clean test
+```
+
+---
+
 # Screenshots
+
 
 ## Swagger UI
 
-![Swagger UI](docs/images/swagger-home.png)
+![Swagger UI](backend/docs/images/swagger-home.png)
 
-## API Endpoints
+---
 
-![API Endpoints](docs/images/swagger-endpoints.png)
+## JWT Authentication
 
-## Authentication
+![JWT Authentication](backend/docs/images/swagger-auth.png)
 
-![JWT Authentication](docs/images/swagger-auth.png)
-
-## AI Blog Generation
-
-![AI Blog Generation](docs/images/ai-blog-generation.png)
 ---
 
 # License
 
-This project is intended for learning, portfolio, and educational purposes.
+This project was built for learning, portfolio, and educational purposes.
