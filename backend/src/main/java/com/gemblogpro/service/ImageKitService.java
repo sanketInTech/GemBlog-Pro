@@ -74,12 +74,8 @@ public class ImageKitService {
                             BLOG_FOLDER + "\r\n" +
 
                             "--" + boundary + "--\r\n";
-            System.out.println("ImageKit endpoint: " + imageKitConfig.getUrlEndpoint());
 
             String key = imageKitConfig.getPrivateKey();
-            System.out.println("Private key length: " + (key == null ? 0 : key.length()));
-            System.out.println("Private key prefix: " +
-                    (key == null ? "null" : key.substring(0, Math.min(12, key.length()))));
 
             String auth = Base64.getEncoder().encodeToString(
                     (imageKitConfig.getPrivateKey() + ":")
